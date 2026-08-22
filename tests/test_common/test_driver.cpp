@@ -15,6 +15,7 @@
  */
 
 #include "test_driver.hpp"
+#include <iomanip>
 
 TestDriver* TestDriver::m_this = nullptr;
 
@@ -31,7 +32,7 @@ uint8_t hex_digit_to_keycode(uint8_t digit) {
 }
 } // namespace
 
-TestDriver::TestDriver() : m_driver{&TestDriver::keyboard_leds, &TestDriver::send_keyboard, &TestDriver::send_mouse, &TestDriver::send_extra} {
+TestDriver::TestDriver() : m_driver{&TestDriver::keyboard_leds, &TestDriver::send_keyboard, &TestDriver::send_nkro, &TestDriver::send_mouse, &TestDriver::send_extra} {
     host_set_driver(&m_driver);
     m_this = this;
 }
@@ -49,7 +50,12 @@ void TestDriver::send_keyboard(report_keyboard_t* report) {
     m_this->send_keyboard_mock(*report);
 }
 
+void TestDriver::send_nkro(report_nkro_t* report) {
+    m_this->send_nkro_mock(*report);
+}
+
 void TestDriver::send_mouse(report_mouse_t* report) {
+    test_logger.trace() << std::setw(10) << std::left << "send_mouse: (X:" << (int)report->x << ", Y:" << (int)report->y << ", H:" << (int)report->h << ", V:" << (int)report->v << ", B:" << (int)report->buttons << ")" << std::endl;
     m_this->send_mouse_mock(*report);
 }
 

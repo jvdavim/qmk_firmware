@@ -55,7 +55,7 @@ This installs the udev rules from the [qmk_udev](https://github.com/qmk/qmk_udev
 
 ### 1.4 Install a HalfKay-compatible flasher
 
-The ErgoDox EZ's `halfkay` bootloader needs `teensy_loader_cli` on your `$PATH` (QMK's flasher shells out to it).
+The ErgoDox EZ's `halfkay` bootloader needs `teensy_loader_cli` on your `$PATH`. You never run this yourself — `qmk flash` (step 3 below) calls it internally once it detects the keyboard in bootloader mode. It just needs to be installed and discoverable on `$PATH` beforehand.
 
 **Option A — AUR (fastest, if you have an AUR helper):**
 
@@ -92,28 +92,24 @@ This produces `.build/ergodox_ez_base_jvdavim.hex`.
 
 ## 3. Flashing
 
-1. Put the keyboard into bootloader mode. Any of the following works:
-   - Press a `QK_BOOT`/`RESET` key if you've bound one in the layout (this keymap doesn't currently have one bound).
-   - Press the physical reset button — a small recessed button accessible through a pinhole near the top of the right-hand half's case; press it with a paperclip or SIM-eject tool.
-   - Hold both `Shift` keys and press `Pause`, or hold both `Shift` and press `B`.
+The important thing to understand: **run the flash command first, then trigger the reset.** `qmk flash` sits and watches for a bootloader device to appear (it polls for up to 10 minutes) before it flashes anything. So you type the command in your terminal *before* touching the keyboard's reset button — not after. Once the keyboard drops into bootloader mode it stops working as a keyboard (it enumerates as a completely different USB device), so there's nothing to type into it at that point anyway; `qmk flash`, already running and watching, notices it and flashes automatically.
 
-   You only have ~7 seconds after entering bootloader mode to flash before it resets back.
+Step by step:
 
-2. Flash:
+1. In your terminal, start the flash command. It will print something like "waiting for device..." and just sit there — this is expected:
 
    ```sh
    qmk flash -kb ergodox_ez/base -km jvdavim
    ```
 
-   (or just `qmk flash` with the defaults from 1.2)
+   (or just `qmk flash` with the defaults from 1.2, or `make ergodox_ez/base:jvdavim:flash`)
 
-   Equivalently, with `make`:
+2. *Now*, with the command still running, put the keyboard into bootloader mode using any one of:
+   - Press the physical reset button — a small recessed button accessible through a pinhole near the top of the right-hand half's case; press it with a paperclip or SIM-eject tool. This is the reliable option and doesn't depend on the current keymap.
+   - Hold both `Shift` keys and press `Pause`, or hold both `Shift` and press `B` — QMK's generic default bootloader-entry combos. These only work if the currently-*flashed* firmware on the board still has default/Fn-layer bindings for them; since this is your own customized keymap, don't rely on these unless you've verified them.
+   - Press a `QK_BOOT` key if you've bound one in the layout (this keymap doesn't currently have one bound — let me know if you'd like one added, it's the most convenient long-term option).
 
-   ```sh
-   make ergodox_ez/base:jvdavim:flash
-   ```
-
-3. Wait for the keyboard to reset automatically once flashing completes, then test it.
+3. Back in the terminal, `qmk flash` detects the bootloader device, flashes automatically, and exits. The keyboard resets itself back into normal typing mode when done — no further action needed.
 
 ## Troubleshooting
 
